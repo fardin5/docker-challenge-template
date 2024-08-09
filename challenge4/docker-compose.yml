@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8080:80"
+    depends_on:
+      - node-service
+
+  node-service:
+    build:
+      context: ./docker/api
+      dockerfile: Dockerfile
+    environment:
+      DB_HOST: db
+      DB_DATABASE: books
+      DB_USERNAME: fardin
+      DB_PASSWORD: password
+      PORT: 3000
+    ports:
+      - "3003:3000"
+      - "3004:3000"
+      - "3005:3000"
+    depends_on:
+      - db
+
+  db:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: books
+      MYSQL_USER: fardin
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./docker/db/init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  db-data:
